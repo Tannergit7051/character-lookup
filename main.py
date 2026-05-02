@@ -13,7 +13,7 @@ app.add_middleware(
 )
 
 HEADERS = {
-    "User-Agent": "character-lookup/1.0 (https://github.com/Tannergit7051/character-lookup; tannergit7051@github)"
+    "User-Agent": "character-lookup/1.0 (https://github.com/Tannergit7051/character-lookup)"
 }
 
 def wiki_lookup(name: str):
@@ -22,6 +22,8 @@ def wiki_lookup(name: str):
     if r.status_code != 200:
         return None
     data = r.json()
+    if data.get("type") == "disambiguation":
+        return None
     return {
         "title": data.get("title"),
         "desc": data.get("extract"),
@@ -29,16 +31,16 @@ def wiki_lookup(name: str):
     }
 
 @app.get("/lookup")
-def lookup(name: str):
+def lookup(name: str, style: str = ""):
     data = wiki_lookup(name)
     if not data:
         return {
             "found": False,
-            "prompt": f"highly detailed original character inspired by {name}",
+            "prompt": name + ", original character, highly detailed, expressive face, dynamic pose, intricate costume design, vibrant colors",
             "image": ""
         }
     return {
         "found": True,
-        "prompt": f"{data['title']}, {data['desc']}, highly detailed anime style character portrait",
+        "prompt": data['title'] + ", " + data['desc'] + ", highly detailed anime style character portrait",
         "image": data["image"]
     }
