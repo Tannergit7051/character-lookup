@@ -12,15 +12,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+HEADERS = {
+    "User-Agent": "character-lookup/1.0 (https://github.com/Tannergit7051/character-lookup; tannergit7051@github)"
+}
+
 def wiki_lookup(name: str):
     url = "https://en.wikipedia.org/api/rest_v1/page/summary/" + name.replace(" ", "_")
-    r = requests.get(url)
-
+    r = requests.get(url, headers=HEADERS)
     if r.status_code != 200:
         return None
-
     data = r.json()
-
     return {
         "title": data.get("title"),
         "desc": data.get("extract"),
@@ -30,14 +31,12 @@ def wiki_lookup(name: str):
 @app.get("/lookup")
 def lookup(name: str):
     data = wiki_lookup(name)
-
     if not data:
         return {
             "found": False,
             "prompt": f"highly detailed original character inspired by {name}",
             "image": ""
         }
-
     return {
         "found": True,
         "prompt": f"{data['title']}, {data['desc']}, highly detailed anime style character portrait",
