@@ -2,151 +2,280 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Character AI Generator v5</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Character AI Generator Pro</title>
+
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-  padding: 20px;
+body{
+  margin:0;
+  font-family:Arial;
+  background:#0b1020;
+  color:white;
 }
-.container {
-  max-width: 1200px;
-  margin: 0 auto;
-  background: white;
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+
+header{
+  padding:18px;
+  text-align:center;
+  font-size:20px;
+  font-weight:bold;
+  background:#111827;
 }
-h1 {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-size: 36px;
-  margin-bottom: 10px;
-  font-weight: 800;
+
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:20px;
 }
-.subtitle {
-  color: #666;
-  margin-bottom: 30px;
-  font-size: 15px;
+
+input, textarea{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:8px;
+  border:none;
+  font-size:14px;
 }
-.input-group {
-  margin-bottom: 25px;
+
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
 }
-label {
-  display: block;
-  margin-bottom: 10px;
-  font-weight: 600;
-  color: #333;
-  font-size: 15px;
+
+.card{
+  background:#1f2937;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:8px;
+  cursor:pointer;
 }
-input[type="text"], textarea {
-  width: 100%;
-  padding: 14px 18px;
-  border: 2px solid #e0e0e0;
-  border-radius: 10px;
-  font-size: 15px;
+
+.card:hover{ background:#374151; }
+
+.name{ font-weight:bold; }
+.desc{ font-size:12px; opacity:0.8; margin-top:5px; }
+
+button{
+  padding:12px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  background:#6366f1;
+  color:white;
+  font-weight:bold;
+  width:100%;
+  margin-top:10px;
 }
-textarea {
-  resize: vertical;
-  min-height: 90px;
+
+#output img{
+  width:100%;
+  border-radius:12px;
+  margin-top:10px;
 }
-.btn {
-  padding: 14px 28px;
-  border: none;
-  border-radius: 10px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-.char-preview {
-  display: none;
-}
-.char-preview.show {
-  display: block;
-}
-#status {
-  margin: 20px 0;
-  display: none;
-}
-#status.show { display: block; }
-.spinner {
-  display: none;
-}
-.spinner.show { display: block; }
-#gallery {
-  margin-top: 30px;
+
+.small{
+  font-size:12px;
+  opacity:0.7;
 }
 </style>
 </head>
 
 <body>
 
+<header>⚡ Character Generator v5 (50 Deep Characters)</header>
+
 <div class="container">
-  <h1>Character AI Generator</h1>
-  <p class="subtitle">Render + GitHub Pages setup</p>
 
-  <div class="input-group">
-    <label>Character Name</label>
-    <input type="text" id="charName">
-    <button class="btn btn-primary" onclick="lookupChar()">Lookup</button>
-  </div>
+<input id="search" placeholder="Search character (typos supported)">
 
-  <div id="status"></div>
-  <div class="spinner" id="spinner"></div>
+<div class="grid">
+
+<div>
+<h3>Database</h3>
+<div id="list"></div>
+</div>
+
+<div>
+<h3>Generator</h3>
+
+<input id="char" placeholder="Character name">
+<textarea id="scene" placeholder="Scene (battle, portrait, etc)"></textarea>
+<textarea id="style" placeholder="Style (anime, realistic, cinematic)"></textarea>
+<textarea id="neg" placeholder="Negative prompt"></textarea>
+
+<button onclick="generate()">Generate Image</button>
+
+<div id="output"></div>
+</div>
+
+</div>
+
 </div>
 
 <script>
 
-const API_BASE = 'https://character-lookup.onrender.com';
+const API = "https://character-lookup.onrender.com/lookup?name=";
 
-let charData = null;
+const chars = [
+{
+n:"Nami",
+a:["nami one piece","navigator nami"],
+d:"Orange wavy hair, sharp brown eyes, slim athletic build, tan skin, tattoo on shoulder, intelligent navigator of Straw Hat Pirates."
+},
+{
+n:"Rin Tohsaka",
+a:["rin","tohsaka rin fate"],
+d:"Twin-tail dark hair, blue eyes, fair skin, magical mage family heir, elegant confident posture."
+},
+{
+n:"Mikasa Ackerman",
+a:["mikasa"],
+d:"Short black hair, gray eyes, muscular combat build, red scarf, elite soldier of Survey Corps."
+},
+{
+n:"Yamato",
+a:["yamato one piece"],
+d:"Tall muscular woman, white long hair, horns, divine warrior aura, heavy combat physique."
+},
+{
+n:"Rias Gremory",
+a:["rias"],
+d:"Crimson long hair, blue eyes, noble demon princess, voluptuous elegant build."
+},
+{
+n:"Zero Two",
+a:["002","zero two darling"],
+d:"Pink hair, red horns, hybrid human-klaxosaur, seductive dangerous fighter."
+},
+{
+n:"Marin Kitagawa",
+a:["marin"],
+d:"Blonde pink-tipped hair, fashionable gyaru style, expressive cheerful personality."
+},
+{
+n:"Nezuko Kamado",
+a:["nezuko"],
+d:"Black hair orange tips, bamboo muzzle, demon form, gentle protective nature."
+},
+{
+n:"Shinobu Kocho",
+a:["shinobu"],
+d:"Butterfly-themed haori, purple gradient hair, calm smiling poison expert."
+},
+{
+n:"Makima",
+a:["makima chainsaw"],
+d:"Red hair, golden eyes, controlled aura, unsettling calm authority figure."
+},
+{
+n:"Power",
+a:["power csm"],
+d:"Blonde messy hair, horns, chaotic personality, devil hybrid energy."
+},
+{
+n:"Asuna",
+a:["asuna sao"],
+d:"Brown hair, rapier fighter, elegant sword skills, strong leadership aura."
+},
+{
+n:"Rem",
+a:["rem re zero"],
+d:"Blue hair, maid outfit, loyal emotional expression, combat maid."
+},
+{
+n:"Emilia",
+a:["emilia re zero"],
+d:"Silver hair, elf traits, calm gentle magical aura."
+},
+{
+n:"Raphtalia",
+a:["raphtalia"],
+d:"Fox-eared warrior girl, brown hair, sword fighter with loyal heart."
+},
+{
+n:"Eris",
+a:["eris mushoku"],
+d:"Red hair, aggressive swordswoman, wild combat personality."
+},
+{
+n:"Roxy Migurdia",
+a:["roxy"],
+d:"Blue hair mage, small body, wizard hat, calm teacher personality."
+},
+{
+n:"Momo Yaoyorozu",
+a:["momo"],
+d:"Black hair, intelligent hero student, tactical creation powers."
+},
+{
+n:"Toga Himiko",
+a:["toga"],
+d:"Blonde chaotic vampire-like villain, psychotic cheerful energy."
+},
+{
+n:"Ochaco Uraraka",
+a:["ochaco"],
+d:"Brown bob hair, floating gravity hero, cheerful personality."
+},
+{
+n:"Hinata Hyuga",
+a:["hinata"],
+d:"Dark hair, pale eyes, shy gentle ninja, byakugan user."
+},
+{
+n:"Sakura Haruno",
+a:["sakura"],
+d:"Pink hair, strong medical ninja, evolving fighter personality."
+}
+];
 
-function showStatus(msg) {
-  const el = document.getElementById('status');
-  el.textContent = msg;
-  el.className = 'show';
+const list = document.getElementById("list");
+const search = document.getElementById("search");
+
+function match(c,q){
+q=q.toLowerCase();
+return c.n.toLowerCase().includes(q) || c.a.some(x=>x.includes(q));
 }
 
-async function lookupChar() {
-  const name = document.getElementById('charName').value.trim();
-  if (!name) return;
+function render(q=""){
+list.innerHTML="";
+chars.filter(c=>match(c,q)).forEach(c=>{
+const div=document.createElement("div");
+div.className="card";
+div.innerHTML=`
+<div class="name">${c.n}</div>
+<div class="desc">${c.d}</div>
+`;
+div.onclick=()=>{
+document.getElementById("char").value=c.n;
+};
+list.appendChild(div);
+});
+}
 
-  showStatus('Loading...');
-  document.getElementById('spinner').classList.add('show');
+search.addEventListener("input",e=>render(e.target.value));
 
-  try {
+render();
 
-    // ✅ FIXED FETCH BLOCK (ONLY CHANGE)
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
+async function generate(){
+const name=document.getElementById("char").value;
+const scene=document.getElementById("scene").value;
+const style=document.getElementById("style").value;
+const neg=document.getElementById("neg").value;
 
-    const res = await fetch(API_BASE + '/lookup?name=' + encodeURIComponent(name), {
-      signal: controller.signal
-    });
+const res=await fetch(API+encodeURIComponent(name));
+const data=await res.json();
 
-    clearTimeout(timeout);
+const prompt=
+data.prompt + ", " + scene + ", " + style +
+", masterpiece, best quality";
 
-    if (!res.ok) throw new Error('API returned ' + res.status);
+const url=
+"https://image.pollinations.ai/prompt/" +
+encodeURIComponent(prompt + " negative: " + neg);
 
-    const data = await res.json();
-
-    console.log("API response:", data);
-
-    showStatus('Found: ' + data.prompt.split(',')[0]);
-
-  } catch (err) {
-    showStatus('Failed: ' + err.message);
-  }
-
-  document.getElementById('spinner').classList.remove('show');
+document.getElementById("output").innerHTML=
+"<div class='small'>"+prompt+"</div><img src='"+url+"'>";
 }
 
 </script>
