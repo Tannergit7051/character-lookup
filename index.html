@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"="width=device-width, initial-scale=1.0">
+<title>Character AI Generator Pro</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+h1 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 36px;
+  margin-bottom: 10px;
+  font-weight: 800;
+}
+.subtitle {
+  color: #666;
+  margin-bottom: 30px;
+  font-size: 15px;
+}
+.input-group {
+  margin-bottom: 25px;
+}
+label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  color: #333;
+  font-size: 15px;
+}
+input[type="text"], textarea {
+  width: 100%;
+  padding: 14px 18px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 15px;
+  transition: all 0.3s;
+  font-family: inherit;
+}
+input[type="text"]:focus, textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+textarea {
+  resize: vertical;
+  min-height: 90px;
+}
+.btn {
+  padding: 14px 28px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: inherit;
+  display: inline-block;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+.char-preview {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 15px;
+  padding: 25px;
+  margin: 25px 0;
+  display: none;
+}
+.char-preview.show {
+  display: block;
+  animation: fadeIn 0.5s;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.char-header {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+.char-img {
+  width: 100px;
+  height: 100px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 3px solid white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.char-img.placeholder {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 42px;
+  font-weight: bold;
+}
+.char-info {
+  flex: 1;
+}
+.char-name {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  margin-bottom: 8px;
+}
+.char-source {
+  display: inline-block;
+  background: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+.source-manual { color: #667eea; }
+.source-jikan { color: #10b981; }
+.source-wikipedia { color: #f59e0b; }
+.source-fallback { color: #ef4444; }
+.char-desc {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #555;
+  max-height: 150px;
+  overflow-y: auto;
+  background: rgba(255,255,255,0.7);
+  padding: 12px;
+  border-radius: 8px;
+}
+.options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 25px;
+  margin: 25px 0;
+}
+.option-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 12px;
+}
+.option-label {
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #333;
+  font-size: 14px;
+}
+.btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.option-btn {
+  padding: 10px 18px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.option-btn:hover {
+  border-color: #667eea;
+  background: #f8f9ff;
+}
+.option-btn.active {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+}
+.generator-select {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.gen-btn {
+  flex: 1;
+  min-width: 150px;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  background: white;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  text-align: left;
+}
+.gen-btn:hover {
+  border-color: #667eea;
+}
+.gen-btn.active {
+  border-color: #667eea;
+  background: #f8f9ff;
+}
+.gen-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.gen-desc {
+  font-size: 11px;
+  color: #666;
+}
+#status {
+  padding: 16px 20px;
+  border-radius: 10px;
+  margin: 20px 0;
+  font-size: 14px;
+  display: none;
+  font-weight: 500;
+}
+#status.show { display: block; animation: fadeIn 0.3s; }
+#status.info {
+  background: #dbeafe;
+  color: #1e40af;
+  border-left: 4px solid #3b82f6;
+}
+#status.success {
+  background: #d1fae5;
+  color: #065f46;
+  border-left: 4px solid #10b981;
+}
+#status.error {
+  background: #fee2e2;
+  color: #991b1b;
+  border-left: 4px solid #ef4444;
+}
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 30px auto;
+  display: none;
+}
+.spinner.show { display: block; }
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+#gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-top: 30px;
+}
+.img-card {
+  position: relative;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  transition: all 0.3s;
+  cursor: pointer;
+  background: #f0f0f0;
+  aspect-ratio: 1/1;
+}
+.img-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.25);
+}
+.img-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.img-card.loading::after {
+  content: 'Generating...';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #666;
+  font-weight: 600;
+  font-size: 14px;
+}
+.img-label {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(0,0,0,0.75);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.pro-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-left: 10px;
+  letter-spacing: 0.5px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🎨 Character AI Generator <span class="pro-badge">PRO</span></h1>
+  <p class="subtitle">Multi-engine AI image generation with smart character database lookup</p>
+
+  <div class="input-group">
+    <label for="charName">Character Name</label>
+    <input type="text" id="charName" placeholder="e.g. Nami, Naruto, Goku, Spider-Man, Batman">
+    <button class="btn btn-primary" onclick="lookupChar()" style="margin-top:12px;">🔍 Look Up Character</button>
+  </div>
+
+  <div id="charPreview" class="char-preview">
+    <div class="char-header">
+      <div id="charImgContainer"></div>
+      <div class="char-info">
+        <div class="char-name" id="charNameDisplay"></div>
+        <span class="char-source" id="charSource"></span>
+        <div class="char-desc" id="charDesc"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-group">
+    <label for="scene">Scene / Action / Pose (Optional)</label>
+    <textarea id="scene" placeholder="e.g. running through fire, epic battle stance, sitting on throne, jumping through clouds, dramatic lighting"></textarea>
+  </div>
+
+  <div class="input-group">
+    <label for="negative">Negative Prompt - Things to Avoid (Optional)</label>
+    <textarea id="negative" placeholder="e.g. blurry, low quality, deformed, ugly, bad anatomy, distorted face, extra limbs"></textarea>
+  </div>
+
+  <div class="options">
+    <div class="option-section">
+      <div class="option-label">Art Style</div>
+      <div class="btn-group">
+        <button class="option-btn active" onclick="setStyle('')">Default</button>
+        <button class="option-btn" onclick="setStyle('anime art style, vibrant colors')">Anime</button>
+        <button class="option-btn" onclick="setStyle('cinematic photo, dramatic lighting, film grain')">Cinematic</button>
+        <button class="option-btn" onclick="setStyle('photorealistic, 8k uhd, hyperrealistic')">Realistic</button>
+        <button class="option-btn" onclick="setStyle('digital art, concept art, artstation trending')">Digital Art</button>
+      </div>
+    </div>
+
+    <div class="option-section">
+      <div class="option-label">Number of Images</div>
+      <div class="btn-group">
+        <button class="option-btn active" onclick="setCount(1)">1</button>
+        <button class="option-btn" onclick="setCount(3)">3</button>
+        <button class="option-btn" onclick="setCount(6)">6</button>
+        <button class="option-btn" onclick="setCount(9)">9</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="option-section">
+    <div class="option-label">AI Generator Engine</div>
+    <div class="generator-select">
+      <label class="gen-btn active">
+        <input type="checkbox" checked onchange="toggleGen('pollinations')" style="margin-right:8px;">
+        <div class="gen-title">Pollinations AI</div>
+        <div class="gen-desc">Fast, anime-friendly, unlimited</div>
+      </label>
+      <label class="gen-btn">
+        <input type="checkbox" onchange="toggleGen('segmind')" style="margin-right:8px;">
+        <div class="gen-title">Segmind</div>
+        <div class="gen-desc">High quality, detailed</div>
+      </label>
+      <label class="gen-btn">
+        <input type="checkbox" onchange="toggleGen('prodia')" style="margin-right:8px;">
+        <div class="gen-title">Prodia</div>
+        <div class="gen-desc">Stable Diffusion, realistic</div>
+      </label>
+    </div>
+  </div>
+
+  <button class="btn btn-primary" onclick="generate()" style="font-size:18px;padding:16px 32px;margin-top:20px;">
+    🚀 Generate Images
+  </button>
+
+  <div id="status"></div>
+  <div class="spinner" id="spinner"></div>
+  <div id="gallery"></div>
+</div>
+
+<script>
+const API_BASE = 'https://character-lookup.onrender.com';
+
+let charData = null;
+let style = '';
+let count = 1;
+let activeGens = ['pollinations'];
+
+function showStatus(msg, type) {
+  const el = document.getElementById('status');
+  el.textContent = msg;
+  el.className = 'show ' + type;
+}
+
+function setStyle(s) {
+  style = s;
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function setCount(c) {
+  count = c;
+  document.querySelectorAll('.btn-group .option-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function toggleGen(gen) {
+  const btn = event.target.closest('.gen-btn');
+  if (event.target.checked) {
+    activeGens.push(gen);
+    btn.classList.add('active');
+  } else {
+    activeGens = activeGens.filter(g => g !== gen);
+    btn.classList.remove('active');
+  }
+}
+
+async function lookupChar() {
+  const name = document.getElementById('charName').value.trim();
+  if (!name) {
+    showStatus('⚠️ Please enter a character name', 'error');
+    return;
+  }
+
+  showStatus('🔍 Looking up ' + name + '...', 'info');
+  document.getElementById('charPreview').classList.remove('show');
+  document.getElementById('spinner').classList.add('show');
+
+  try {
+    const res = await fetch(API_BASE + '/lookup?name=' + encodeURIComponent(name));
+    if (!res.ok) throw new Error('API returned ' + res.status);
+    
+    const data = await res.json();
+    charData = data;
+
+    const charName = data.prompt.split(',')[0];
+    document.getElementById('charNameDisplay').textContent = charName;
+
+    const sourceMap = {
+      manual: ['🔵 Manual DB', 'source-manual'],
+      jikan: ['🟢 MyAnimeList', 'source-jikan'],
+      wikipedia: ['🟡 Wikipedia', 'source-wikipedia'],
+      fallback: ['🔴 Generic', 'source-fallback']
+    };
+    const [sourceText, sourceClass] = sourceMap[data.source] || ['Unknown', ''];
+    const sourceEl = document.getElementById('charSource');
+    sourceEl.textContent = sourceText;
+    sourceEl.className = 'char-source ' + sourceClass;
+
+    document.getElementById('charDesc').textContent = data.prompt;
+
+    const imgContainer = document.getElementById('charImgContainer');
+    if (data.image) {
+      imgContainer.innerHTML = '<img src="' + data.image + '" class="char-img">';
+    } else {
+      imgContainer.innerHTML = '<div class="char-img placeholder">' + charName.charAt(0) + '</div>';
+    }
+
+    document.getElementById('charPreview').classList.add('show');
+    document.getElementById('spinner').classList.remove('show');
+
+    if (data.found) {
+      showStatus('✅ Character found! Physical details loaded. Add scene and generate.', 'success');
+    } else {
+      showStatus('⚠️ Not in database - using generic prompt. Results may vary.', 'error');
+    }
+
+  } catch (err) {
+    document.getElementById('spinner').classList.remove('show');
+    showStatus('❌ ' + err.message + '. API may be sleeping (~30s first load). Retry!', 'error');
+  }
+}
+
+function buildPrompt() {
+  if (!charData || !charData.prompt) {
+    const name = document.getElementById('charName').value.trim();
+    if (!name) return null;
+    return name + ', original character, detailed design, professional illustration';
+  }
+
+  let prompt = charData.prompt;
+  const scene = document.getElementById('scene').value.trim();
+  if (scene) prompt += ', ' + scene;
+  if (style) prompt += ', ' + style;
+  prompt += ', masterpiece, best quality, highly detailed, sharp focus';
+
+  return prompt;
+}
+
+async function generate() {
+  if (activeGens.length === 0) {
+    showStatus('⚠️ Select at least one AI generator', 'error');
+    return;
+  }
+
+  const prompt = buildPrompt();
+  if (!prompt) {
+    showStatus('⚠️ Look up a character first!', 'error');
+    return;
+  }
+
+  const negative = document.getElementById('negative').value.trim() || 'blurry, low quality, deformed, ugly, bad anatomy';
+
+  showStatus('🎨 Generating ' + count + ' images with ' + activeGens.length + ' engine(s)...', 'info');
+  
+  const gallery = document.getElementById('gallery');
+  gallery.innerHTML = '';
+
+  const totalImages = count * activeGens.length;
+  for (let i = 0; i < count; i++) {
+    for (const gen of activeGens) {
+      const card = document.createElement('div');
+      card.className = 'img-card loading';
+      gallery.appendChild(card);
+
+      const seed = Math.floor(Math.random() * 999999);
+      let url = '';
+
+      if (gen === 'pollinations') {
+        url = 'https://image.pollinations.ai/prompt/' + encodeURIComponent(prompt + ' | negative: ' + negative) + 
+              '?width=512&height=512&nologo=true&seed=' + seed;
+      } else if (gen === 'segmind') {
+        url = 'https://api.segmind.com/v1/sd1.5-txt2img?' + new URLSearchParams({
+          prompt: prompt,
+          negative_prompt: negative,
+          samples: 1,
+          width: 512,
+          height: 512,
+          seed: seed
+        });
+      } else if (gen === 'prodia') {
+        url = 'https://images.prodia.xyz/generate?' + new URLSearchParams({
+          prompt: prompt,
+          model: 'absolutereality_v181.safetensors',
+          negative_prompt: negative,
+          steps: 25,
+          cfg: 7,
+          seed: seed,
+          sampler: 'DPM++ 2M Karras'
+        });
+      }
+
+      const img = document.createElement('img');
+      img.src = url;
+      img.onload = () => {
+        card.classList.remove('loading');
+        const label = document.createElement('div');
+        label.className = 'img-label';
+        label.textContent = gen.charAt(0).toUpperCase() + gen.slice(1);
+        card.appendChild(label);
+      };
+      img.onerror = () => {
+        card.innerHTML = '<div style="padding:20px;text-align:center;color:#999;">Failed</div>';
+      };
+      card.appendChild(img);
+
+      card.onclick = () => {
+        window.open(url.replace('512', '1024'), '_blank');
+      };
+    }
+  }
+
+  showStatus('✅ Generating! Images appear as they finish. Click to enlarge.', 'success');
+}
+
+document.getElementById('charName').addEventListener('keypress', e => {
+  if (e.key === 'Enter') lookupChar();
+});
+</script>
+
+</body>
+</html>
